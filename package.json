@@ -1,0 +1,26 @@
+{
+  "name": "m_control_api",
+  "version": "1.0.0",
+  "description": "This is an API for used in Elon M Control App with JWT features",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "keywords": [
+    "express",
+    "jwt",
+    "mongoose"
+  ],
+  "author": "MUTHUMANI S",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "dotenv": "^16.1.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.2.2",
+    "nodemon": "^2.0.22"
+  }
+}
