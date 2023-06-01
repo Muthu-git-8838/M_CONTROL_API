@@ -22,6 +22,15 @@ app.post("/register", async (req, res) => {
       email: req.body.email,
       mobile: req.body.mobile,
     };
+    // const user = await User(req.body);
+    // user
+    //   .save()
+    //   .then(() => {
+    //     res.status(201).send("Registration Successfull");
+    //   })
+    //   .catch((e) => {
+    //     res.status(500).send(e);
+    //   });
     bcrypt.hash(req.body.password, 15, async (err, hashed) => {
       if (!err) {
         const hashedPassword = hashed;
@@ -30,7 +39,9 @@ app.post("/register", async (req, res) => {
         await user
           .save()
           .then(() => {
-            res.status(201).send("Registration Successfull");
+            res.status(201).send({
+              message: "Registeration Successfull",
+            });
           })
           .catch((e) => {
             res.status(500).send(e);
