@@ -8,7 +8,7 @@ const cors = require("cors");
 
 const User = require("./model/userSchema");
 const PORT = process.env.PORT || 7007;
-app.use(cors);
+app.use(cors());
 app.use(express.json());
 app.get("/", async (req, res) => {
   res.send("<h3>Hello M-Control</h3>");
