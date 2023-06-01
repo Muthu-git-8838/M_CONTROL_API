@@ -1,9 +1,9 @@
 const express = require("express");
 const app = express();
+require("./db/conn");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
-require("./db/conn");
 
 const User = require("./model/userSchema");
 const PORT = process.env.PORT || 7007;
@@ -15,21 +15,31 @@ app.get("/", async (req, res) => {
 
 app.post("/register", async (req, res) => {
   try {
-    const userName = req.body.userName;
-    const password = req.body.password;
-    bcrypt.hash(password, 15, async (err, hashed) => {
+    // const userName = req.body.userName;
+    // const password = req.body.password;
+    let Data = {
+      userName: req.body.userName,
+      email: req.body.email,
+      mobile: req.body.mobile,
+    };
+    bcrypt.hash(req.body.password, 15, async (err, hashed) => {
       if (!err) {
         const hashedPassword = hashed;
-        const Data = {
-          userName: userName,
-          password: hashedPassword,
-        };
+        Data = { ...Data, password: hashedPassword };
         const user = new User(Data);
-        const userData = await user.save();
-        res.status(201).send("Registration Successfull");
+        await user
+          .save()
+          .then(() => {
+            res.status(201).send("Registration Successfull");
+          })
+          .catch((e) => {
+            res.status(500).send(e);
+          });
       }
     });
-  } catch (e) {}
+  } catch (e) {
+    res.status(500).send(e);
+  }
 });
 
 app.post("/login", async (req, res) => {
