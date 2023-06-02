@@ -15,41 +15,91 @@ app.get("/", async (req, res) => {
   res.send("<h3>Hello M-Control</h3>");
 });
 
+let RegisterOTP = null;
 app.post("/register", async (req, res) => {
   try {
     // const userName = req.body.userName;
     // const password = req.body.password;
-    let Data = {
-      userName: req.body.userName,
-      email: req.body.email,
-      mobile: req.body.mobile,
-    };
-    // const user = await User(req.body);
-    // user
-    //   .save()
-    //   .then(() => {
-    //     res.status(201).send("Registration Successfull");
-    //   })
-    //   .catch((e) => {
-    //     res.status(500).send(e);
-    //   });
+    // let Data = {
+    //   userName: req.body.userName,
+    //   email: req.body.email,
+    //   mobile: req.body.mobile,
+    // };
     bcrypt.hash(req.body.password, 15, async (err, hashed) => {
       if (!err) {
         const hashedPassword = hashed;
-        Data = { ...Data, password: hashedPassword };
-        const user = new User(Data);
-        await user
-          .save()
-          .then(() => {
-            res.status(201).send({
-              message: "Registeration Successfull",
-            });
-          })
-          .catch((e) => {
-            res.status(500).send(e);
-          });
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: 587,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+
+        const OTP_R = await generator.generate(6, {
+          lowerCaseAlphabets: false,
+          upperCaseAlphabets: false,
+          specialChars: false,
+        });
+        RegisterOTP = OTP_R;
+        const mailOptions = {
+          from: '"ELON NATIVE SYSTEMS" <elonnativesystems@gmail.com> ',
+          to: req.body.email,
+          subject: "WELCOME TO ELON NATIVE SYSTEMS",
+          text: `Hello ${req.body.email}, The OTP for creating Your account is ${OTP_R}`,
+        };
+
+        transporter.sendMail(mailOptions, async (error, info) => {
+          if (error) {
+            console.error(error);
+            res.status(500).send("Error sending email");
+          } else {
+            console.log("Email sent: " + info.response);
+            res.send("Email sent successfully" + info.response);
+          }
+        });
+        // Data = { ...Data, password: hashedPassword };
+        // const user = new User(Data);
+        // await user
+        //   .save()
+        //   .then(() => {
+        //     res.status(201).send({
+        //       message: "Registeration Successfull",
+        //     });
+        //   })
+        //   .catch((e) => {
+        //     res.status(500).send(e);
+        //   });
       }
     });
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
+
+app.post("/verify-register", async (req, res) => {
+  try {
+    if (RegisterOTP == req.body.otp) {
+      let Data = {
+        userName: req.body.userName,
+        email: req.body.email,
+        mobile: req.body.mobile,
+        password: req.body.password,
+      };
+      const user = new User(Data);
+      await user
+        .save()
+        .then(() => {
+          res.status(201).send({
+            message: "Registeration Successfull",
+          });
+        })
+        .catch((e) => {
+          res.status(500).send(e);
+        });
+    } else
+      res.send({ error_message: "Something went wrong", otp: RegisterOTP });
   } catch (e) {
     res.status(500).send(e);
   }
@@ -96,13 +146,16 @@ app.get("/user", verifyToken, async (req, res) => {
 });
 
 let generatedOtp = null;
+let currentUser = null;
 app.post("/forget-password", async (req, res) => {
+  const currentEmail = await User.findOne({ userName: req.body.userName });
+  currentUser = await currentEmail;
   const transporter = nodemailer.createTransport({
-    host: "smtp-relay.sendinblue.com",
+    host: process.env.SMTP_HOST,
     port: 587,
     auth: {
-      user: "elonnativesystems@gmail.com",
-      pass: "MImVyFELh3pabOQY",
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
     },
   });
 
@@ -115,7 +168,7 @@ app.post("/forget-password", async (req, res) => {
 
   const mailOptions = {
     from: '"ELON NATIVE SYSTEMS" <elonnativesystems@gmail.com> ',
-    to: req.body.email,
+    to: currentEmail.email,
     subject: "PassWord Recovery",
     text: `Hello ${req.body.email}, The OTP for changing You password is ${OTP}`,
   };
@@ -136,7 +189,20 @@ app.post("/verify-otp", async (req, res) => {
   try {
     if (userOTP == generatedOtp) {
       // OTP is correct
-      res.send("OTP verified successfully");
+      // res.send("OTP verified successfully");
+      bcrypt.hash(req.body.password, 15, async (err, hashed) => {
+        if (!err) {
+          currentUser.password = hashed;
+          await currentUser
+            .save()
+            .then(() => {
+              res.send({ message: "OTP VERIFIED AND PASSWORD CHANGED" });
+            })
+            .catch(() => {
+              res.send({ error_message: "FAILED TO VERIFY" });
+            });
+        } else res.status(500).send({ error_message: "Something went wrong" });
+      });
     } else {
       // OTP is incorrect
       res.status(400).send("Invalid OTP");
