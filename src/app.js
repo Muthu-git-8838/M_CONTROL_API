@@ -5,7 +5,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const cors = require("cors");
-
+const nodemailer = require("nodemailer");
+const generator = require("otp-generator");
 const User = require("./model/userSchema");
 const PORT = process.env.PORT || 7007;
 app.use(cors());
@@ -92,6 +93,57 @@ const verifyToken = (req, res, next) => {
 app.get("/user", verifyToken, async (req, res) => {
   const user = req.user;
   res.status(200).send(user);
+});
+
+let generatedOtp = null;
+app.post("/forget-password", async (req, res) => {
+  const transporter = nodemailer.createTransport({
+    host: "smtp-relay.sendinblue.com",
+    port: 587,
+    auth: {
+      user: "elonnativesystems@gmail.com",
+      pass: "MImVyFELh3pabOQY",
+    },
+  });
+
+  const OTP = await generator.generate(6, {
+    lowerCaseAlphabets: false,
+    upperCaseAlphabets: false,
+    specialChars: false,
+  });
+  generatedOtp = OTP;
+
+  const mailOptions = {
+    from: '"ELON NATIVE SYSTEMS" <elonnativesystems@gmail.com> ',
+    to: req.body.email,
+    subject: "PassWord Recovery",
+    text: `Hello ${req.body.email}, The OTP for changing You password is ${OTP}`,
+  };
+
+  transporter.sendMail(mailOptions, async (error, info) => {
+    if (error) {
+      console.error(error);
+      res.status(500).send("Error sending email");
+    } else {
+      console.log("Email sent: " + info.response);
+      res.send("Email sent successfully" + info.response);
+    }
+  });
+});
+
+app.post("/verify-otp", async (req, res) => {
+  const userOTP = req.body.otp;
+  try {
+    if (userOTP == generatedOtp) {
+      // OTP is correct
+      res.send("OTP verified successfully");
+    } else {
+      // OTP is incorrect
+      res.status(400).send("Invalid OTP");
+    }
+  } catch (e) {
+    res.send("Something went wrong");
+  }
 });
 
 app.listen(PORT, () => {
