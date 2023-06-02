@@ -56,7 +56,7 @@ app.post("/register", async (req, res) => {
             res.status(500).send("Error sending email");
           } else {
             // console.log("Email sent: " + info.response);
-            res.send("Email sent successfully" + info.response);
+            res.status(200).send("Email sent successfully");
           }
         });
         // Data = { ...Data, password: hashedPassword };
@@ -98,8 +98,7 @@ app.post("/verify-register", async (req, res) => {
         .catch((e) => {
           res.status(500).send(e);
         });
-    } else
-      res.send({ error_message: "Something went wrong", otp: RegisterOTP });
+    } else res.status(401).send({ error_message: "Something went wrong" });
   } catch (e) {
     res.status(500).send(e);
   }
