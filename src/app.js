@@ -52,10 +52,10 @@ app.post("/register", async (req, res) => {
 
         transporter.sendMail(mailOptions, async (error, info) => {
           if (error) {
-            console.error(error);
+            // console.error(error);
             res.status(500).send("Error sending email");
           } else {
-            console.log("Email sent: " + info.response);
+            // console.log("Email sent: " + info.response);
             res.send("Email sent successfully" + info.response);
           }
         });
@@ -175,10 +175,10 @@ app.post("/forget-password", async (req, res) => {
 
   transporter.sendMail(mailOptions, async (error, info) => {
     if (error) {
-      console.error(error);
+      // console.error(error);
       res.status(500).send("Error sending email");
     } else {
-      console.log("Email sent: " + info.response);
+      // console.log("Email sent: " + info.response);
       res.send("Email sent successfully" + info.response);
     }
   });
