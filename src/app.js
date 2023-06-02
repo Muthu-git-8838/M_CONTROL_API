@@ -16,6 +16,7 @@ app.get("/", async (req, res) => {
 });
 
 let RegisterOTP = null;
+let hashedPassword = null;
 app.post("/register", async (req, res) => {
   try {
     // const userName = req.body.userName;
@@ -27,7 +28,7 @@ app.post("/register", async (req, res) => {
     // };
     bcrypt.hash(req.body.password, 15, async (err, hashed) => {
       if (!err) {
-        const hashedPassword = hashed;
+        hashedPassword = hashed;
         const transporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST,
           port: 587,
@@ -85,7 +86,7 @@ app.post("/verify-register", async (req, res) => {
         userName: req.body.userName,
         email: req.body.email,
         mobile: req.body.mobile,
-        password: req.body.password,
+        password: hashedPassword,
       };
       const user = new User(Data);
       await user
