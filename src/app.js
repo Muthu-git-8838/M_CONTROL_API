@@ -50,6 +50,9 @@ app.post("/register", async (req, res) => {
           subject: "WELCOME TO ELON NATIVE SYSTEMS",
           text: `Hello ${req.body.email}, The OTP for creating Your account is ${OTP_R}`,
         };
+        // const currentEmail = await User.findOne({
+        //   userName: req.body.userName,
+        // });
 
         transporter.sendMail(mailOptions, async (error, info) => {
           if (error) {
@@ -148,40 +151,44 @@ app.get("/user", verifyToken, async (req, res) => {
 let generatedOtp = null;
 let currentUser = null;
 app.post("/forget-password", async (req, res) => {
-  const currentEmail = await User.findOne({ userName: req.body.userName });
-  currentUser = await currentEmail;
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: 587,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+  try {
+    const currentEmail = await User.findOne({ userName: req.body.userName });
+    currentUser = await currentEmail;
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: 587,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
 
-  const OTP = await generator.generate(6, {
-    lowerCaseAlphabets: false,
-    upperCaseAlphabets: false,
-    specialChars: false,
-  });
-  generatedOtp = OTP;
+    const OTP = await generator.generate(6, {
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false,
+    });
+    generatedOtp = OTP;
 
-  const mailOptions = {
-    from: '"ELON NATIVE SYSTEMS" <elonnativesystems@gmail.com> ',
-    to: currentEmail.email,
-    subject: "PassWord Recovery",
-    text: `Hello ${req.body.email}, The OTP for changing You password is ${OTP}`,
-  };
+    const mailOptions = {
+      from: '"ELON NATIVE SYSTEMS" <noreply@elonnativesystems.com> ',
+      to: currentEmail.email,
+      subject: "PassWord Recovery",
+      text: `Hello ${currentEmail.email}, The OTP for changing You password is ${OTP}`,
+    };
 
-  transporter.sendMail(mailOptions, async (error, info) => {
-    if (error) {
-      // console.error(error);
-      res.status(500).send("Error sending email");
-    } else {
-      // console.log("Email sent: " + info.response);
-      res.send("Email sent successfully" + info.response);
-    }
-  });
+    transporter.sendMail(mailOptions, async (error, info) => {
+      if (error) {
+        // console.error(error);
+        res.status(500).send("Error sending email");
+      } else {
+        // console.log("Email sent: " + info.response);
+        res.send("Email sent successfully" + info.response);
+      }
+    });
+  } catch (e) {
+    res.status(500).send("Something went wrong");
+  }
 });
 
 app.post("/verify-otp", async (req, res) => {
