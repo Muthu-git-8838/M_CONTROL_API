@@ -8,9 +8,18 @@ const cors = require("cors");
 const nodemailer = require("nodemailer");
 const generator = require("otp-generator");
 const User = require("./model/userSchema");
+const http = require("http");
+const socketIO = require("socket.io");
 const PORT = process.env.PORT || 7007;
 app.use(cors());
 app.use(express.json());
+
+const server = http.createServer(app);
+const io = socketIO(server, {
+  cors: {
+    origin: "*",
+  },
+});
 app.get("/", async (req, res) => {
   res.send("<h3>Hello M-Control</h3>");
 });
@@ -221,4 +230,19 @@ app.post("/verify-otp", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`App listening on http://localhost:${PORT}`);
+});
+
+//Socket.io Code
+
+io.on("connection", (socket) => {
+  console.log("Socket is active");
+
+  socket.on("chat", (data) => {
+    console.log("The payload data is:", data);
+    io.emit("chat", data);
+  });
+});
+
+server.listen(7007, () => {
+  console.log("Server is active on http://localhost:7007 ....");
 });
