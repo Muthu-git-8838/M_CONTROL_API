@@ -17,7 +17,7 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:3000/",
   },
 });
 app.get("/", async (req, res) => {
