@@ -10,6 +10,9 @@ const generator = require("otp-generator");
 const User = require("./model/userSchema");
 const http = require("http");
 const socketIO = require("socket.io");
+const Message = require("./model/messageSchema");
+const { error } = require("console");
+
 const PORT = process.env.PORT || 7007;
 app.use(cors());
 app.use(express.json());
@@ -224,6 +227,14 @@ app.post("/verify-otp", async (req, res) => {
     res.send("Something went wrong");
   }
 });
+app.get("/messages", async (req, res) => {
+  try {
+    const Messages = await Message.find();
+    res.status(200).send(Messages);
+  } catch (e) {
+    res.status(500).send(error);
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`App listening on http://localhost:${PORT}`);
@@ -234,9 +245,20 @@ app.listen(PORT, () => {
 io.on("connection", (socket) => {
   console.log("Socket is active");
 
-  socket.on("chat", (data) => {
+  socket.on("chat", async (data) => {
     console.log("The payload data is:", data);
-    io.emit("chat", data);
+
+    const Messages = new Message({
+      sender: data.userName,
+      content: data.message,
+    });
+    await Messages.save()
+      .then(() => {
+        io.emit("chat", data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   });
 });
 
