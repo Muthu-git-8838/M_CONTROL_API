@@ -15,11 +15,15 @@ app.use(cors());
 app.use(express.json());
 
 const server = http.createServer(app);
-const io = socketIO(server, {
-  cors: {
-    origin: "*",
-  },
-});
+const io = socketIO(
+  server,
+  { path: "/sockets" },
+  {
+    cors: {
+      origin: "*",
+    },
+  }
+);
 app.get("/", async (req, res) => {
   res.send("<h3>Hello M-Control</h3>");
 });
@@ -28,13 +32,6 @@ let RegisterOTP = null;
 let hashedPassword = null;
 app.post("/register", async (req, res) => {
   try {
-    // const userName = req.body.userName;
-    // const password = req.body.password;
-    // let Data = {
-    //   userName: req.body.userName,
-    //   email: req.body.email,
-    //   mobile: req.body.mobile,
-    // };
     bcrypt.hash(req.body.password, 15, async (err, hashed) => {
       if (!err) {
         hashedPassword = hashed;
